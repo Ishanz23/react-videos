@@ -1,26 +1,52 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import Searchbar from './components/Searchbar'
+import { VideoDetail } from './components/VideoDetail'
+import { VideoList } from './components/VideoList'
+import { youtube, API_KEY } from './api/youtube'
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends React.Component {
+  state = { videos: [], selectedVideo: null }
+
+  componentDidMount() {
+    this.onFormSubmit('react js')
+  }
+
+  onFormSubmit = async term => {
+    try {
+      const res = await youtube.get('/search', {
+        params: {
+          q: term,
+          part: 'snippet',
+          type: 'video',
+          key: API_KEY,
+          maxResults: 10
+        }
+      })
+      this.setState({ videos: res.data.items, selectedVideo: res.data.items[0] })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  onVideoSelect = video => {
+    this.setState({ selectedVideo: video })
+  }
+
+  render() {
+    return (
+      <div className='ui container'>
+        <Searchbar onFormSubmit={this.onFormSubmit}></Searchbar>
+        <div className='ui grid'>
+          <div className='eleven wide column'>
+            <VideoDetail video={this.state.selectedVideo}></VideoDetail>
+          </div>
+          <div className='five wide column'>
+            <VideoList videos={this.state.videos} onVideoSelect={this.onVideoSelect}></VideoList>
+          </div>
+        </div>
+      </div>
+    )
+  }
 }
 
-export default App;
+export default App
